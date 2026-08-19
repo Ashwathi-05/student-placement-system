@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Student Placement Management System</title>
+
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+        }
+
+
+        header {
+            background: #1565c0;
+            color: white;
+            text-align: center;
+            padding: 25px;
+        }
+
+        header h1 {
+            margin-bottom: 8px;
+        }
+
+
+        .form-section {
+            width: 450px;
+            max-width: 90%;
+            background: white;
+            margin: 30px auto;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+        }
+
+        .form-section h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .add-btn {
+            width: 100%;
+            padding: 12px;
+            background: #1565c0;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .add-btn:hover {
+            background: #0d47a1;
+        }
+
+        #message {
+            text-align: center;
+            margin-top: 15px;
+            font-weight: bold;
+            color: green;
+        }
+
+
+        .student-section {
+            width: 90%;
+            margin: 30px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+        }
+
+        .student-section h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #1565c0;
+            color: white;
+            padding: 12px;
+        }
+
+        td {
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .placed {
+            color: green;
+            font-weight: bold;
+        }
+
+        .not-placed {
+            color: red;
+            font-weight: bold;
+        }
+
+        .action-btn {
+            border: none;
+            padding: 7px 10px;
+            margin: 2px;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+        }
+
+        .approve {
+            background: green;
+        }
+
+        .delete {
+            background: red;
+        }
+
+
+        footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 15px;
+            margin-top: 40px;
+        }
+
+
+        @media(max-width: 700px) {
+
+            .student-section {
+                overflow-x: auto;
+            }
+
+            table {
+                min-width: 700px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+
+    <header>
+
+        <h1>🎓 Student Placement Management System</h1>
+
+        <p>Manage student placement details easily</p>
+
+    </header>
+
+
+
+    <div class="form-section">
+
+        <h2>➕ Add Student</h2>
+
+        <form id="studentForm">
+
+            <input
+                type="text"
+                id="name"
+                placeholder="Student Name"
+                required>
+
+            <input
+                type="email"
+                id="email"
+                placeholder="Email Address"
+                required>
+
+            <input
+                type="text"
+                id="department"
+                placeholder="Department"
+                required>
+
+            <button
+                type="submit"
+                class="add-btn">
+
+                Add Student
+
+            </button>
+
+        </form>
+
+        <p id="message"></p>
+
+    </div>
+
+
+
+    <div class="student-section">
+
+        <h2>📋 Student Placement Details</h2>
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>ID</th>
+
+                    <th>Name</th>
+
+                    <th>Email</th>
+
+                    <th>Department</th>
+
+                    <th>Status</th>
+
+                    <th>Actions</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody id="studentTable">
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+
+    <footer>
+
+        <p>© 2026 Student Placement Management System</p>
+
+    </footer>
+
+
+
+    <script>
+
+        const API = "http://localhost:5000";
+
+
+        document.getElementById("studentForm")
+            .addEventListener("submit", function(event) {
+
+                event.preventDefault();
+
+                const student = {
+
+                    name: document.getElementById("name").value,
+
+                    email: document.getElementById("email").value,
+
+                    department:
+                        document.getElementById("department").value,
+
+                    placed: false
+
+                };
+
+
+                fetch(API + "/add", {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify(student)
+
+                })
+
+                .then(response => response.text())
+
+                .then(data => {
+
+                    document.getElementById("message")
+                        .innerText = data;
+
+                    document.getElementById("studentForm").reset();
+
+                    loadStudents();
+
+                })
+
+                .catch(error => {
+
+                    document.getElementById("message")
+                        .innerText =
+                        "❌ Unable to connect to server";
+
+                    console.log(error);
+
+                });
+
+            });
+
+
+        function loadStudents() {
+
+            fetch(API + "/students")
+
+            .then(response => response.json())
+
+            .then(students => {
+
+                const table =
+                    document.getElementById("studentTable");
+
+                table.innerHTML = "";
+
+                students.forEach(student => {
+
+                    const row = document.createElement("tr");
+
+                    row.innerHTML = `
+
+                        <td>${student._id}</td>
+
+                        <td>${student.name}</td>
+
+                        <td>${student.email}</td>
+
+                        <td>${student.department}</td>
+
+                        <td class="${student.placed ?
+                            'placed' : 'not-placed'}">
+
+                            ${student.placed ?
+                                'Placed' : 'Not Placed'}
+
+                        </td>
+
+                        <td>
+
+                            <button
+                                class="action-btn approve"
+                                onclick="updateStudent('${student._id}')">
+
+                                ${student.placed ?
+                                    'Unmark' : 'Mark Placed'}
+
+                            </button>
+
+                            <button
+                                class="action-btn delete"
+                                onclick="deleteStudent('${student._id}')">
+
+                                Delete
+
+                            </button>
+
+                        </td>
+
+                    `;
+
+                    table.appendChild(row);
+
+                });
+
+            })
+
+            .catch(error => {
+
+                console.log(error);
+
+            });
+
+        }
+
+
+        function updateStudent(id) {
+
+            fetch(API + "/student/" + id)
+
+            .then(response => response.json())
+
+            .then(student => {
+
+                fetch(API + "/update/" + id, {
+
+                    method: "PUT",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        placed: !student.placed
+                    })
+
+                })
+
+                .then(response => response.text())
+
+                .then(data => {
+
+                    alert(data);
+
+                    loadStudents();
+
+                });
+
+            });
+
+        }
+
+
+
+        function deleteStudent(id) {
+
+            if (!confirm("Delete this student?")) {
+                return;
+            }
+
+            fetch(API + "/delete/" + id, {
+
+                method: "DELETE"
+
+            })
+
+            .then(response => response.text())
+
+            .then(data => {
+
+                alert(data);
+
+                loadStudents();
+
+            });
+
+        }
+
+
+
+        loadStudents();
+
+    </script>
+
+</body>
+
+</html>
